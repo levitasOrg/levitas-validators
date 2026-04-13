@@ -26,6 +26,7 @@
         <developer>
             <id>levitasorg</id>
             <name>Levitas Org</name>
+            <email>levitas.dev@gmail.com</email>
             <url>https://github.com/levitasOrg</url>
         </developer>
     </developers>
@@ -43,11 +44,13 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <!-- Dependency versions -->
         <jackson.version>2.17.2</jackson.version>
         <junit.version>5.10.3</junit.version>
         <assertj.version>3.26.3</assertj.version>
         <mockito.version>5.12.0</mockito.version>
+
         <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.3.1</maven-surefire-plugin.version>
@@ -55,6 +58,7 @@
         <maven-javadoc-plugin.version>3.8.0</maven-javadoc-plugin.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -107,7 +111,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>${surefireArgLine}</argLine>
+                    <!-- @{} is late-binding: evaluated after JaCoCo prepare-agent sets the property -->
+                    <argLine>@{surefireArgLine}</argLine>
                 </configuration>
             </plugin>
 
@@ -197,6 +202,7 @@
             <id>release</id>
             <build>
                 <plugins>
+                    <!-- GPG signing for Maven Central -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -208,13 +214,22 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <!-- Non-interactive signing for CI environments -->
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
+
+                    <!-- Publish to Maven Central via the Central Portal API -->
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.5.0</version>
+                        <version>${central-publishing-maven-plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
